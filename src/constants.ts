@@ -1,5 +1,13 @@
 // Keep in step with the client's src/config.js by hand.
-export const ROOM_MAX_CLIENTS = 50;
+// Run a Farm: one room = one rural town with FARM_SLOTS farms around it, one per player.
+export const FARM_SLOTS = 4;
+export const ROOM_MAX_CLIENTS = FARM_SLOTS;
+// Farm summary (farms.ts, roster `farm`): building ids / fields listed at most, the largest small
+// count (stand level, tractors, trucks, drones, pump jacks) and the JSON length relayed.
+export const FARM_LIST_MAX = 64;
+export const FARM_PLOTS_MAX = 16;
+export const FARM_ID_MAX = 64;
+export const FARM_INFO_MAX = 2048;
 
 // Longest accepted strings.
 export const NAME_MAX = 64;
@@ -13,7 +21,11 @@ export const PRESENCE_PETS_MAX = 8;
 export const POSE_BOUNDS = { xy: 5000, z: 1e8, speed: 2000 };
 
 // Colyseus drops the whole connection for a WebSocket message above this (default 4 KB).
-export const MAX_PAYLOAD_BYTES = 128 * 1024;
+export const MAX_PAYLOAD_BYTES = 512 * 1024;
+
+// Run a Farm: the client's whole game state is saved as one JSON string (`farm`), opaque to the
+// server beyond "a JSON object no longer than this" (must stay under MAX_PAYLOAD_BYTES).
+export const FARM_MAX_LEN = 400 * 1024;
 
 // How long a dropped connection (WiFi blip, backgrounded tab) may reconnect with the same session.
 export const RECONNECT_SECONDS = 20;
@@ -69,3 +81,26 @@ export const ID_PATTERN = /^[A-Za-z0-9_-]{1,32}$/;
 // The client's per-browser fallback id for players who are not signed in to Bloxity.
 // Guests are never persisted.
 export const GUEST_ID_PREFIX = "guest-";
+
+// --- Bloxity integrations (bloxity.ts, presence.ts) -------------------------------------------------
+// Hosted leaderboards: the boards the server reports from each saved farm (client bloxity.js
+// LEADERBOARDS must declare the same ids), how many scores per report call and how often.
+export const LB_BOARDS = [
+  { id: "level", label: "Farm Level", order: "desc", mode: "best", format: "number", reset: "none" },
+  { id: "earned", label: "Money Earned", order: "desc", mode: "best", format: "compact", reset: "none" },
+  { id: "prestige", label: "Prestige", order: "desc", mode: "best", format: "number", reset: "none" },
+  { id: "eggs", label: "Eggs Collected", order: "desc", mode: "best", format: "compact", reset: "none" },
+] as const;
+export const LB_REPORT_MAX = 200;
+export const LB_REPORT_EVERY_MS = 30 * 1000;
+// What a player rides (roster `ride`, client mount.js kinds; "" = on foot) and the emote they play
+// (roster `emote`: a Bloxity emote catalogue id, `emoteAt` = server ms it started; "" = none).
+export const RIDE_PATTERN = /^[a-z0-9_-]{0,24}$/;
+export const EMOTE_PATTERN = /^[A-Za-z0-9_-]{0,48}$/;
+
+// Invites (invite.ts): unlock the client's Money Boost (an invite sent) and Friends Boost (an
+// invited friend joined). The most direct invites remembered, the friends-joined ceiling, and the
+// shape of a Bloxity account id (invite targets / link `ref`).
+export const INVITES_SENT_MAX = 200;
+export const INVITES_MAX = 1e6;
+export const USER_ID_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;

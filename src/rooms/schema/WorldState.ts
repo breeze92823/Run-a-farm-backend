@@ -22,6 +22,18 @@ export const PlayerState = schema(
     pets: t.string().default(""), // equipped pets "kind:tier,kind:tier"
     world: t.string().default(""), // the world the player is in (client WORLDS id), "" = the start world
     avatar: t.string().default(""), // Bloxity look JSON { equipped, proportions, skin }, "" = default
+    // Run a Farm (farms.ts): the farm slot around the town this player holds (0..FARM_SLOTS-1,
+    // -1 = none) and the sanitized summary JSON of their farm (`farmInfo`), "" = not sent yet.
+    slot: t.int8().default(-1),
+    farm: t.string().default(""),
+    // Bloxity integrations (presence.ts / bloxity.ts): the account id (verified on deployed servers;
+    // "" = guest) so clients can match Bloxity chat messages to a player for the speech bubble,
+    // what they ride ("" = on foot, else the client mount.js kind + "/" + seat), and the emote
+    // playing ("" = none) with the server time it started.
+    uid: t.string().default(""),
+    ride: t.string().default(""),
+    emote: t.string().default(""),
+    emoteAt: t.float64().default(0),
   },
   "PlayerState",
 );

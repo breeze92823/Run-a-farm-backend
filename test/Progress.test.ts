@@ -95,3 +95,29 @@ describe("progress", () => {
     assert.strictEqual(fake.docs.get("u3")!.trophies, 1e9, "the unread save is never overwritten");
   });
 });
+
+describe("farm save", () => {
+  let colyseus: ColyseusTestServer<typeof appConfig>;
+  before(async () => (colyseus = await testServer()));
+  beforeEach(async () => await colyseus.cleanup());
+  afterEach(() => __setPlayersForTest(null));
+
+  it("stores the farm JSON string, loads it back and rejects bad ones", async () => {
+    const fake = fakePlayers([{ _id: "f1", farm: '{"money":5}', version: 1, updatedAt: new Date() }]);
+    __setPlayersForTest(fake);
+    const room = await colyseus.createRoom<WorldState>("world", {});
+    const c = await colyseus.connectTo(room, { userId: "f1", username: "Fay" });
+    let got: any = null;
+    c.onMessage("progress", (m: any) => (got = m));
+    fake.release();
+    await sleep(150);
+    assert.strictEqual(got?.farm, '{"money":5}');
+    c.send("saveProgress", { farm: '{"money":9}' });
+    await sleep(150);
+    assert.strictEqual((fake.docs.get("f1") as any).farm, '{"money":9}');
+    c.send("saveProgress", { farm: "not json" });
+    c.send("saveProgress", { farm: "[1]" });
+    await sleep(150);
+    assert.strictEqual((fake.docs.get("f1") as any).farm, '{"money":9}');
+  });
+});

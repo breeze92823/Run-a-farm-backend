@@ -13,7 +13,11 @@ export const PRESENCE_PETS_MAX = 8;
 export const POSE_BOUNDS = { xy: 5000, z: 1e8, speed: 2000 };
 
 // Colyseus drops the whole connection for a WebSocket message above this (default 4 KB).
-export const MAX_PAYLOAD_BYTES = 128 * 1024;
+export const MAX_PAYLOAD_BYTES = 512 * 1024;
+
+// Run a Farm: the client's whole game state is saved as one JSON string (`farm`), opaque to the
+// server beyond "a JSON object no longer than this" (must stay under MAX_PAYLOAD_BYTES).
+export const FARM_MAX_LEN = 400 * 1024;
 
 // How long a dropped connection (WiFi blip, backgrounded tab) may reconnect with the same session.
 export const RECONNECT_SECONDS = 20;

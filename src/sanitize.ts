@@ -1,6 +1,6 @@
 import {
   CURRENCY_MAX, REBIRTHS_MAX, DISTANCE_MAX, PLAY_SECONDS_MAX, OWNED_MAX, PETS_MAX, PET_TIERS_MAX,
-  PET_SLOTS_MAX, GIFTS_MAX, POTION_KINDS_MAX, POTION_COUNT_MAX, ID_PATTERN,
+  PET_SLOTS_MAX, GIFTS_MAX, POTION_KINDS_MAX, POTION_COUNT_MAX, ID_PATTERN, FARM_MAX_LEN,
 } from "./constants.js";
 import type { PlayerDoc, SavedPet } from "./db.js";
 
@@ -76,6 +76,15 @@ export function sanitizeProgress(raw: unknown): Partial<PlayerDoc> | null {
   if (finite(raw.bestDistance)) out.bestDistance = clampNum(raw.bestDistance, DISTANCE_MAX);
   if (finite(raw.playtime)) out.playtime = clampInt(raw.playtime, PLAY_SECONDS_MAX);
   if (finite(raw.lastSeen)) out.lastSeen = clampInt(raw.lastSeen, Date.now() + 10 * 60 * 1000);
+
+  // Run a Farm's whole state: a JSON string holding an object, bounded in size.
+  if (typeof raw.farm === "string" && raw.farm.length <= FARM_MAX_LEN) {
+    try {
+      if (isObject(JSON.parse(raw.farm))) out.farm = raw.farm;
+    } catch {
+      // Not JSON: ignored.
+    }
+  }
 
   ownedPair(raw, out, "boats", "boat");
   ownedPair(raw, out, "engines", "engine");

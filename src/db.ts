@@ -43,6 +43,7 @@ export interface PlayerDoc {
   dailyDay?: number; // days unlocked this cycle
   dailyLast?: number; // UTC day index of the last unlock
   dailyClaimed?: number[]; // claimed day indexes this cycle
+  farm?: string; // Run a Farm: the client's whole game state as a JSON string (sanitize.ts)
   version: number;
   updatedAt: Date;
 }

@@ -80,7 +80,14 @@ jobs:
       # the Bloxity matchmaker picks the pod capacity itself, so no seatCap is sent.
       - name: Deploy to Legion
         run: |
-          ROOM_SIZE=$(grep -oP 'ROOM_MAX_CLIENTS\s*=\s*\K\d+' src/constants.ts)
+          # ROOM_MAX_CLIENTS is either a number or an alias of another constant (FARM_SLOTS).
+          ROOM_SIZE=$(grep -oP 'ROOM_MAX_CLIENTS\s*=\s*\K\d+' src/constants.ts || true)
+          if [ -z "${ROOM_SIZE}" ]; then
+            ALIAS=$(grep -oP 'ROOM_MAX_CLIENTS\s*=\s*\K[A-Za-z_][A-Za-z0-9_]*' src/constants.ts || true)
+            if [ -n "${ALIAS}" ]; then
+              ROOM_SIZE=$(grep -oP "\b${ALIAS}\s*=\s*\K\d+" src/constants.ts || true)
+            fi
+          fi
           if [ -z "${ROOM_SIZE}" ]; then
             echo "::error::Could not read ROOM_MAX_CLIENTS from src/constants.ts."
             exit 1

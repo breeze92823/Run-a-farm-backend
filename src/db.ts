@@ -43,6 +43,11 @@ export interface PlayerDoc {
   dailyDay?: number; // days unlocked this cycle
   dailyLast?: number; // UTC day index of the last unlock
   dailyClaimed?: number[]; // claimed day indexes this cycle
+  // Invites (invite.ts): written by the server only, never by saveProgress.
+  invitesSent?: string[]; // friend ids this player invited directly
+  linkShared?: boolean; // shared the invite link at least once
+  invites?: number; // friends who joined through this player's invites (only ever $inc'ed)
+  invitedBy?: string; // who invited THIS player (set once)
   farm?: string; // Run a Farm: the client's whole game state as a JSON string (sanitize.ts)
   version: number;
   updatedAt: Date;

@@ -15,9 +15,12 @@ export function fakePlayers(seed: PlayerDoc[] = []) {
     docs,
     gate,
     release,
-    async findOne(filter: { _id: string }) {
+    // { _id } or one array field containing a value ({ invitesSent: id }).
+    async findOne(filter: Record<string, unknown>) {
       await gate;
-      return docs.get(filter._id) ?? null;
+      if (typeof filter._id === "string") return docs.get(filter._id) ?? null;
+      const [field, value] = Object.entries(filter)[0];
+      return [...docs.values()].find((d: any) => Array.isArray(d[field]) && d[field].includes(value)) ?? null;
     },
     find(filter: Record<string, { $gt: number }>) {
       const [field, { $gt }] = Object.entries(filter)[0];
@@ -40,13 +43,18 @@ export function fakePlayers(seed: PlayerDoc[] = []) {
       const [field, { $gt }] = Object.entries(filter)[0];
       return [...docs.values()].filter((d: any) => d[field] > $gt).length;
     },
-    async updateOne(filter: { _id: string }, update: any, options: any) {
-      const existing = docs.get(filter._id);
-      if (!existing && !options?.upsert) return { modifiedCount: 0 };
+    // $set / $max / $inc / $setOnInsert, upsert; a filter may add { field: { $exists: false } }.
+    async updateOne(filter: Record<string, any>, update: any, options: any) {
+      const existing: any = docs.get(filter._id);
+      for (const [k, v] of Object.entries(filter)) {
+        if (k !== "_id" && v && typeof v === "object" && v.$exists === false && existing && existing[k] !== undefined) return { modifiedCount: 0, upsertedCount: 0 };
+      }
+      if (!existing && !options?.upsert) return { modifiedCount: 0, upsertedCount: 0 };
       const next: any = { ...(existing ?? { _id: filter._id, ...(update.$setOnInsert ?? {}) }), ...(update.$set ?? {}) };
       for (const [k, v] of Object.entries(update.$max ?? {})) next[k] = Math.max(next[k] ?? -Infinity, v as number);
+      for (const [k, v] of Object.entries(update.$inc ?? {})) next[k] = (next[k] ?? 0) + (v as number);
       docs.set(filter._id, next);
-      return { modifiedCount: 1 };
+      return existing ? { modifiedCount: 1, upsertedCount: 0 } : { modifiedCount: 0, upsertedCount: 1 };
     },
   };
   return fake as unknown as Collection<PlayerDoc> & { docs: Map<string, PlayerDoc>; gate: Promise<void>; release: () => void };

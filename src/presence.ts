@@ -1,4 +1,4 @@
-import { AVATAR_MAX_LEN, ID_PATTERN, POSE_BOUNDS, PRESENCE_PETS_MAX, PET_TIERS_MAX } from "./constants.js";
+import { AVATAR_MAX_LEN, EMOTE_PATTERN, RIDE_PATTERN, ID_PATTERN, POSE_BOUNDS, PRESENCE_PETS_MAX, PET_TIERS_MAX } from "./constants.js";
 import type { PlayerState } from "./rooms/schema/WorldState.js";
 
 // Presence: what the other clients need to draw a player in the world (client remotePlayers.js).
@@ -47,4 +47,21 @@ export function applyLoadout(p: PlayerState, msg: unknown): void {
 export function applyAvatar(p: PlayerState, msg: unknown): void {
   const a = (msg as { avatar?: unknown })?.avatar;
   if (typeof a === "string" && a.length <= AVATAR_MAX_LEN) p.avatar = a;
+}
+
+// `ride` { kind, seat }: what the player rides now ("" = on foot), e.g. "tractor/seat", "bike/bike".
+export function applyRide(p: PlayerState, msg: unknown): void {
+  const m = (msg ?? {}) as { kind?: unknown; seat?: unknown };
+  const kind = typeof m.kind === "string" && RIDE_PATTERN.test(m.kind) ? m.kind : "";
+  const seat = typeof m.seat === "string" && RIDE_PATTERN.test(m.seat) ? m.seat : "";
+  p.ride = kind ? `${kind}/${seat}` : "";
+}
+
+// `emote` { id }: a Bloxity emote the player started ("" stops it); stamped with the server clock so
+// late joiners start it at the right point.
+export function applyEmote(p: PlayerState, msg: unknown, now = Date.now()): void {
+  const id = (msg as { id?: unknown })?.id;
+  if (typeof id !== "string" || !EMOTE_PATTERN.test(id)) return;
+  p.emote = id;
+  p.emoteAt = id ? now : 0;
 }
